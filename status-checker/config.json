@@ -1,0 +1,36 @@
+{
+  "services": [
+    {
+      "name": "auth-service",
+      "url": "http://auth-service:8001/health"
+    },
+    {
+      "name": "payments-service",
+      "url": "http://payments-service:8002/health"
+    },
+    {
+      "name": "email-service",
+      "url": "http://email-service:8003/health"
+    },
+    {
+      "name": "database-proxy",
+      "url": "http://database-proxy:8004/health"
+    },
+    {
+      "name": "search-service",
+      "url": "http://search-service:8005/health"
+    },
+    {
+      "name": "cdn-mock",
+      "url": "http://cdn-mock:8006/health"
+    },
+    {
+      "name": "frontend-ui",
+      "url": "http://frontend:80/"
+    },
+    {
+      "name": "backend-api",
+      "url": "http://backend:8000/api/status"
+    }
+  ]
+}

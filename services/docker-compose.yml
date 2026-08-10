@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  auth-service:
+    build: ./auth-service
+    ports:
+      - "8001:8001"
+      
+  payments-service:
+    build: ./payments-service
+    ports:
+      - "8002:8002"
+      
+  email-service:
+    build: ./email-service
+    ports:
+      - "8003:8003"
+      
+  database-proxy:
+    build: ./database-proxy
+    ports:
+      - "8004:8004"
+      
+  search-service:
+    build: ./search-service
+    ports:
+      - "8005:8005"
+      
+  cdn-mock:
+    build: ./cdn-mock
+    ports:
+      - "8006:8006"

@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: statususer
+      POSTGRES_PASSWORD: statuspassword
+      POSTGRES_DB: statuspage
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - status_net
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - DATABASE_URL=postgresql://statususer:statuspassword@db:5432/statuspage
+    depends_on:
+      - db
+    networks:
+      - status_net
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - status_net
+
+  checker:
+    build: ./status-checker
+    environment:
+      - DATABASE_URL=postgresql://statususer:statuspassword@db:5432/statuspage
+      - CONFIG_PATH=config.json
+    depends_on:
+      - db
+    # Loop infinitely for local dev
+    command: sh -c "while true; do python check_health.py; sleep 30; done"
+    networks:
+      - status_net
+      - services_default
+
+volumes:
+  pgdata:
+
+networks:
+  status_net:
+  services_default:
+    external: true
