@@ -47,12 +47,9 @@ services:
     command: sh -c "while true; do python check_health.py; sleep 30; done"
     networks:
       - status_net
-      - services_default
 
 volumes:
   pgdata:
 
 networks:
   status_net:
-  services_default:
-    external: true

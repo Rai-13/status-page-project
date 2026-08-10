@@ -1,13 +1,10 @@
-import json
 import os
 import time
-import requests
 import psycopg2
-from psycopg2.extras import RealDictCursor
+import psutil
 from datetime import datetime
 
 DATABASE_URL = os.getenv("DATABASE_URL")
-CONFIG_PATH = os.getenv("CONFIG_PATH", "config.json")
 
 def init_db():
     if not DATABASE_URL:
@@ -17,7 +14,7 @@ def init_db():
     try:
         conn = psycopg2.connect(DATABASE_URL)
         cursor = conn.cursor()
-        # Create table if it doesn't exist
+        # Ensure the table is ready (reusing existing schema)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS check_results (
                 id SERIAL PRIMARY KEY,
@@ -35,51 +32,15 @@ def init_db():
         print(f"Error connecting to database: {e}")
         return None
 
-def check_service(service):
-    name = service.get("name")
-    url = service.get("url")
-    
-    print(f"Checking {name} at {url}...")
-    
-    start_time = time.time()
-    try:
-        response = requests.get(url, timeout=10)
-        response_time_ms = int((time.time() - start_time) * 1000)
-        
-        status = "up"
-        if response.status_code >= 500:
-            status = "down"
-        elif response.status_code >= 400:
-            status = "degraded"
-            
-        # Consider it degraded if it takes longer than 1 second
-        if response_time_ms > 1000 and status == "up":
-            status = "degraded"
-            
-        print(f"[{status.upper()}] {name} - {response.status_code} - {response_time_ms}ms")
-        
-        return {
-            "service_name": name,
-            "url": url,
-            "status": status,
-            "response_time_ms": response_time_ms,
-            "error_message": None
-        }
-    except requests.exceptions.RequestException as e:
-        response_time_ms = int((time.time() - start_time) * 1000)
-        print(f"[DOWN] {name} - Request failed: {e}")
-        
-        return {
-            "service_name": name,
-            "url": url,
-            "status": "down",
-            "response_time_ms": response_time_ms,
-            "error_message": str(e)
-        }
-
-def save_result(conn, result):
+def save_result(conn, name, usage_percent):
     if not conn:
         return
+        
+    status = "up"
+    if usage_percent >= 95:
+        status = "down"
+    elif usage_percent >= 80:
+        status = "degraded"
         
     try:
         cursor = conn.cursor()
@@ -87,43 +48,37 @@ def save_result(conn, result):
             INSERT INTO check_results (service_name, url, status, response_time_ms, error_message, timestamp)
             VALUES (%s, %s, %s, %s, %s, %s)
         """, (
-            result["service_name"],
-            result["url"],
-            result["status"],
-            result["response_time_ms"],
-            result["error_message"],
+            name,
+            "system",
+            status,
+            int(usage_percent),
+            None,
             datetime.utcnow()
         ))
         conn.commit()
+        print(f"Logged {name}: {usage_percent}% ({status})")
     except Exception as e:
         print(f"Failed to save result to database: {e}")
         conn.rollback()
 
 def main():
-    print(f"Starting health checks at {datetime.utcnow().isoformat()}...")
+    print(f"Starting system metrics check at {datetime.utcnow().isoformat()}...")
     
-    try:
-        with open(CONFIG_PATH, 'r') as f:
-            config = json.load(f)
-    except Exception as e:
-        print(f"Failed to load config from {CONFIG_PATH}: {e}")
-        return
-
-    services = config.get("services", [])
-    if not services:
-        print("No services configured to check.")
-        return
-
     conn = init_db()
     
-    for service in services:
-        result = check_service(service)
-        save_result(conn, result)
+    # Get system metrics
+    cpu_usage = psutil.cpu_percent(interval=1)
+    ram_usage = psutil.virtual_memory().percent
+    disk_usage = psutil.disk_usage('/').percent
+    
+    save_result(conn, "CPU_Usage", cpu_usage)
+    save_result(conn, "RAM_Usage", ram_usage)
+    save_result(conn, "Disk_Usage", disk_usage)
         
     if conn:
         conn.close()
         
-    print("Health checks completed.")
+    print("System metrics checks completed.")
 
 if __name__ == "__main__":
     main()

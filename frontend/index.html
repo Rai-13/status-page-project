@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Company Status</title>
+    <title>Server Monitor</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -17,7 +17,7 @@
         <header>
             <div class="brand">
                 <div class="logo"></div>
-                <h1>Docker and microservices status page</h1>
+                <h1>Host Server Monitor</h1>
             </div>
             <div class="global-status" id="global-status">
                 <span class="status-indicator"></span>
@@ -27,16 +27,8 @@
 
         <main>
             <section class="infra-section">
-                <h2>System Infrastructure</h2>
+                <h2>Docker Infrastructure</h2>
                 <div class="infra-grid" id="infra-grid">
-                    <div class="infra-card skeleton">
-                        <div class="skeleton-text" style="width:40%"></div>
-                        <div class="skeleton-text" style="width:70%; margin-top:0.5rem; height: 2rem;"></div>
-                    </div>
-                    <div class="infra-card skeleton">
-                        <div class="skeleton-text" style="width:40%"></div>
-                        <div class="skeleton-text" style="width:70%; margin-top:0.5rem; height: 2rem;"></div>
-                    </div>
                     <div class="infra-card skeleton">
                         <div class="skeleton-text" style="width:40%"></div>
                         <div class="skeleton-text" style="width:70%; margin-top:0.5rem; height: 2rem;"></div>
@@ -45,31 +37,15 @@
             </section>
 
             <section class="services-section">
-                <h2>Service Status</h2>
-                <div class="services-grid" id="services-grid">
-                    <!-- Cards or Skeletons injected here -->
-                </div>
-            </section>
-
-            <section class="incidents-section">
-                <h2>Past Incidents</h2>
-                <div class="incidents-list">
-                    <div class="incident">
-                        <div class="incident-header">
-                            <div class="incident-title">Database Latency Spike</div>
-                            <div class="incident-status">Resolved</div>
-                        </div>
-                        <div class="incident-date">August 5, 2026</div>
-                        <div class="incident-body">
-                            The database-proxy experienced a brief period of degraded performance due to a query locking issue. Our automated systems detected the anomaly and successfully completed a failover to the replica instance. All systems are fully operational.
-                        </div>
-                    </div>
+                <h2>System Resources (Host)</h2>
+                <div class="metrics-grid" id="metrics-grid">
+                    <!-- Gauge Cards injected here -->
                 </div>
             </section>
         </main>
         
         <footer>
-            <p>Updates every 30 seconds. &copy; 2026 Company Inc.</p>
+            <p>System metrics logged every 30 seconds. &copy; 2026 Company Inc.</p>
         </footer>
     </div>
 

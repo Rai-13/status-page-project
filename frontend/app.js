@@ -26,7 +26,6 @@ function updateGlobalStatus(services) {
     const globalStatusEl = document.getElementById('global-status');
     const globalTextEl = globalStatusEl.querySelector('.status-text');
     
-    // Reset classes
     globalStatusEl.className = 'global-status';
     
     if (services.length === 0) {
@@ -39,110 +38,75 @@ function updateGlobalStatus(services) {
 
     if (downs > 0) {
         globalStatusEl.classList.add('down');
-        globalTextEl.textContent = 'Major System Outage';
+        globalTextEl.textContent = 'Critical Resource Exhaustion';
     } else if (degraded > 0) {
         globalStatusEl.classList.add('degraded');
-        globalTextEl.textContent = 'Degraded System Performance';
+        globalTextEl.textContent = 'High Resource Usage Detected';
     } else {
         globalStatusEl.classList.add('all-up');
-        globalTextEl.textContent = 'All Systems Operational';
+        globalTextEl.textContent = 'System Healthy';
     }
 }
 
 function renderSkeletons() {
-    const grid = document.getElementById('services-grid');
+    const grid = document.getElementById('metrics-grid');
     grid.innerHTML = '';
     
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 3; i++) {
         const card = document.createElement('div');
-        card.className = 'service-card';
-        card.style.animationDelay = `${i * 0.1}s`;
-        
+        card.className = 'metric-card';
         card.innerHTML = `
-            <div class="card-header">
-                <div class="skeleton skeleton-text"></div>
-                <div class="skeleton skeleton-badge"></div>
-            </div>
-            <div class="skeleton-bar-container">
-                ${Array(30).fill(0).map(() => `<div class="skeleton skeleton-bar"></div>`).join('')}
-            </div>
-            <div class="skeleton-metrics">
-                <div class="skeleton skeleton-metric-text"></div>
-                <div class="skeleton skeleton-metric-text"></div>
-            </div>
+            <div class="skeleton skeleton-text" style="width: 50%; margin-bottom: 2rem;"></div>
+            <div class="skeleton" style="width: 150px; height: 150px; border-radius: 50%; margin: 0 auto;"></div>
         `;
         grid.appendChild(card);
     }
 }
 
 function renderServices(services) {
-    const grid = document.getElementById('services-grid');
+    const grid = document.getElementById('metrics-grid');
     grid.innerHTML = '';
     
     if (!services || services.length === 0) {
-        grid.innerHTML = '<div class="loading">No services found or unable to reach API.</div>';
+        grid.innerHTML = '<div class="loading">No system metrics found.</div>';
         return;
     }
 
-    services.forEach((service, index) => {
+    // Filter to only our system metrics
+    const systemMetrics = services.filter(s => ['CPU_Usage', 'RAM_Usage', 'Disk_Usage'].includes(s.service_name));
+
+    systemMetrics.forEach((metric, index) => {
         const card = document.createElement('div');
-        card.className = `service-card ${service.status}`;
-        card.style.animationDelay = `${index * 0.05}s`;
+        card.className = `metric-card`;
         
-        // Format time
-        const timeAgo = Math.floor((new Date() - new Date(service.timestamp)) / 60000);
-        const timeStr = timeAgo < 1 ? 'Just now' : `${timeAgo}m ago`;
+        // usage is packed in response_time_ms
+        const usage = metric.response_time_ms;
         
-        // Calculate dynamic uptime based on status for demo flair
-        let uptime = "99.99%";
-        if(service.status === 'down') uptime = "98.45%";
-        if(service.status === 'degraded') uptime = "99.20%";
-        
-        // Fake history nodes with Tooltips
-        let historyHtml = '';
-        for(let i = 0; i < 30; i++) {
-            const isRecent = i > 25;
-            const nodeClass = isRecent ? service.status : (Math.random() > 0.95 ? 'degraded' : 'up');
-            const height = 40 + Math.random() * 60;
-            
-            // Generate a random past time
-            const pastTime = new Date(Date.now() - ((30 - i) * 5 * 60000));
-            const timeFormatted = pastTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            
-            // Generate a fake latency
-            let fakeLatency = Math.floor(Math.random() * 50) + 10;
-            if(nodeClass === 'degraded') fakeLatency = Math.floor(Math.random() * 1500) + 1000;
-            if(nodeClass === 'down') fakeLatency = 0;
-            
-            // Real latency for the last node
-            if(i === 29) fakeLatency = service.response_time_ms;
-            
-            historyHtml += `
-                <div class="tooltip-container">
-                    <div class="history-node ${nodeClass}" style="height: ${height}%"></div>
-                    <div class="tooltip">
-                        <div class="latency">${nodeClass.toUpperCase()} - ${fakeLatency}ms</div>
-                        <div class="time">${timeFormatted}</div>
-                    </div>
-                </div>
-            `;
+        let colorClass = "healthy";
+        let strokeColor = "#10b981"; // green
+        if (usage >= 80) {
+            colorClass = "warning";
+            strokeColor = "#f59e0b"; // yellow
+        }
+        if (usage >= 95) {
+            colorClass = "critical";
+            strokeColor = "#ef4444"; // red
         }
 
+        const nameDisplay = metric.service_name.replace("_", " ");
+        const timeAgo = Math.floor((new Date() - new Date(metric.timestamp)) / 60000);
+        const timeStr = timeAgo < 1 ? 'Just now' : `${timeAgo}m ago`;
+
         card.innerHTML = `
-            <div class="card-header">
-                <div class="service-name">
-                    ${service.service_name}
-                    <div class="uptime-metric">${uptime} uptime</div>
-                </div>
-                <div class="service-status-badge">${service.status}</div>
+            <div class="metric-title">${nameDisplay}</div>
+            <div class="gauge-container">
+                <svg viewBox="0 0 100 50" class="gauge">
+                    <path class="gauge-bg" d="M 10,50 A 40,40 0 0,1 90,50" />
+                    <path class="gauge-fill" stroke="${strokeColor}" stroke-dasharray="125.6" stroke-dashoffset="${125.6 * (1 - usage/100)}" d="M 10,50 A 40,40 0 0,1 90,50" />
+                </svg>
+                <div class="gauge-value ${colorClass}">${usage}%</div>
             </div>
-            <div class="history-bar">
-                ${historyHtml}
-            </div>
-            <div class="metrics">
-                <span>Latency: ${service.response_time_ms}ms</span>
-                <span>${timeStr}</span>
-            </div>
+            <div class="metric-footer">Last updated: ${timeStr}</div>
         `;
         
         grid.appendChild(card);
@@ -166,7 +130,7 @@ function renderInfrastructure(infraData) {
     const cards = [
         { label: 'Active Containers', value: infraData.containers_running, subtext: `${infraData.containers_stopped} stopped` },
         { label: 'Database Engine', value: infraData.db_engine, subtext: `v${infraData.db_version.split('.')[0]}` },
-        { label: 'System Health', value: '100%', subtext: 'All sockets healthy' }
+        { label: 'Monitoring Agent', value: 'Active', subtext: 'PID: host' }
     ];
 
     cards.forEach(c => {
@@ -183,7 +147,6 @@ function renderInfrastructure(infraData) {
 async function init() {
     renderSkeletons();
     
-    // Artificial small delay to show off the skeleton loader
     await new Promise(r => setTimeout(r, 600));
     
     const [statusData, infraData] = await Promise.all([
@@ -198,12 +161,9 @@ async function init() {
         renderServices(statusData.services);
     } else {
         updateGlobalStatus([]);
-        document.getElementById('services-grid').innerHTML = '<div class="loading">Failed to load status data. Is the backend running?</div>';
+        document.getElementById('metrics-grid').innerHTML = '<div class="loading">Failed to load system metrics.</div>';
     }
 }
 
-// Run on load
 document.addEventListener('DOMContentLoaded', init);
-
-// Refresh every 30 seconds
 setInterval(init, 30000);
