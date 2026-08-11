@@ -158,12 +158,17 @@ function renderInfrastructure(infraData) {
     if (ecoGrid.querySelector('.skeleton') || ecoGrid.querySelector('.loading')) {
         ecoGrid.innerHTML = '';
     }
+    
+    // Clean up old combined card if it exists
+    const oldEcoContainers = document.getElementById('eco-containers');
+    if (oldEcoContainers) oldEcoContainers.remove();
 
     if (infraData.error && infraData.error.includes("Docker")) {
         ecoGrid.innerHTML = `<div class="infra-card"><div class="infra-label">Docker Error</div><div class="infra-value error" style="font-size: 0.9rem">${infraData.error}</div></div>`;
     } else {
         const ecoCards = [
-            { id: 'eco-containers', label: 'Active Containers', value: infraData.containers_running, subtext: `${infraData.containers_stopped} stopped` },
+            { id: 'eco-active-containers', label: 'Active Containers', value: infraData.containers_running, subtext: `Running` },
+            { id: 'eco-stopped-containers', label: 'Stopped Containers', value: infraData.containers_stopped, subtext: `Exited` },
             { id: 'eco-db', label: 'Database Engine', value: infraData.db_engine, subtext: `v${infraData.db_version.split('.')[0]}` },
             { id: 'eco-k8s', label: 'Kubernetes Status', value: infraData.k8s_status, subtext: 'Cluster not reachable' }
         ];
@@ -215,9 +220,13 @@ function renderInfrastructure(infraData) {
                         : `<button class="btn btn-kill port-kill-btn" onclick="requestKillPort(${p.port})">Kill Process</button>`;
                         
                     portCard.innerHTML = `
-                        <div class="infra-label">Port ${p.port}</div>
-                        <div class="infra-value"><span style="font-size: 1.1rem; word-break: break-all;">${svcName}</span> <span class="infra-subtext">Listening</span></div>
-                        ${actionHtml}
+                        <div style="flex-grow: 1;">
+                            <div class="infra-label">Port ${p.port}</div>
+                            <div class="infra-value"><span style="font-size: 1.1rem; word-break: break-all;">${svcName}</span> <span class="infra-subtext">Listening</span></div>
+                        </div>
+                        <div style="margin-top: auto; padding-top: 1rem; width: 100%;">
+                            ${actionHtml}
+                        </div>
                     `;
                     portsGrid.appendChild(portCard);
                 } else {
@@ -229,38 +238,61 @@ function renderInfrastructure(infraData) {
 
     const hostCards = [
         { id: 'host-os', label: 'Operating System', value: infraData.os_info.split(' ')[0], subtext: infraData.os_info.split(' ')[1] || '' },
-        { id: 'host-arch', label: 'Architecture', value: infraData.architecture, subtext: 'System' },
-        { id: 'host-load', label: 'System Load', value: infraData.sys_load, subtext: '1m, 5m, 15m' },
-        { id: 'host-netsent', label: 'Network Sent', value: `${infraData.net_sent_gb} GB`, subtext: 'Total Upload' },
-        { id: 'host-netrecv', label: 'Network Recv', value: `${infraData.net_recv_gb} GB`, subtext: 'Total Download' },
-        { id: 'host-disktotal', label: 'Disk Capacity', value: `${infraData.disk_total_gb} GB`, subtext: 'Total Space' },
-        { id: 'host-diskfree', label: 'Disk Free', value: `${infraData.disk_free_gb} GB`, subtext: 'Available' },
-        { id: 'host-cpucores', label: 'CPU Cores', value: infraData.cpu_cores, subtext: 'Logical' },
-        { id: 'host-cpufreq', label: 'CPU Frequency', value: `${infraData.cpu_freq_mhz} MHz`, subtext: 'Current' },
-        { id: 'host-ram', label: 'Total RAM', value: `${infraData.total_ram_gb} GB`, subtext: 'Physical' },
-        { id: 'host-swap', label: 'Swap Memory', value: `${infraData.swap_memory_gb} GB`, subtext: 'Virtual' },
-        { id: 'host-procs', label: 'Active Processes', value: infraData.active_processes, subtext: 'Running' },
-        { id: 'host-uptime', label: 'Host Uptime', value: `${infraData.uptime_hours}h`, subtext: 'Continuous' },
-        { id: 'host-users', label: 'Logged Users', value: infraData.logged_in_users || 0, subtext: 'Active Sessions' },
-        { id: 'host-partitions', label: 'Disk Partitions', value: infraData.disk_partitions || 0, subtext: 'Mounted Volumes' },
-        { id: 'host-boot', label: 'Last Boot Time', value: infraData.boot_time || 'Unknown', subtext: 'System Start' }
+        { id: 'host-arch', label: 'Architecture', value: infraData.architecture, subtext: '' },
+        { id: 'host-load', label: 'System Load', value: infraData.sys_load, subtext: '' },
+        { id: 'host-netsent', label: 'Network Sent', value: `${infraData.net_sent_gb} GB`, subtext: '' },
+        { id: 'host-netrecv', label: 'Network Recv', value: `${infraData.net_recv_gb} GB`, subtext: '' },
+        { id: 'host-disktotal', label: 'Disk Capacity', value: `${infraData.disk_total_gb} GB`, subtext: '' },
+        { id: 'host-diskfree', label: 'Disk Free', value: `${infraData.disk_free_gb} GB`, subtext: '' },
+        { id: 'host-cpucores', label: 'CPU Cores', value: infraData.cpu_cores, subtext: '' },
+        { id: 'host-cpufreq', label: 'CPU Frequency', value: `${infraData.cpu_freq_mhz} MHz`, subtext: '' },
+        { id: 'host-ram', label: 'Total RAM', value: `${infraData.total_ram_gb} GB`, subtext: '' },
+        { id: 'host-swap', label: 'Swap Memory', value: `${infraData.swap_memory_gb} GB`, subtext: '' },
+        { id: 'host-procs', label: 'Active Processes', value: infraData.active_processes, subtext: '' },
+        { id: 'host-uptime', label: 'Host Uptime', value: `${infraData.uptime_hours}h`, subtext: '' },
+        { id: 'host-users', label: 'Logged Users', value: infraData.logged_in_users || 0, subtext: '' },
+        { id: 'host-partitions', label: 'Disk Partitions', value: infraData.disk_partitions || 0, subtext: '' },
+        { id: 'host-boot', label: 'Last Boot Time', value: infraData.boot_time || 'Unknown', subtext: '' }
     ];
 
     hostCards.forEach((c, index) => {
         let div = document.getElementById(c.id);
+        let innerContent = '';
+        if (c.id === 'host-load') {
+            const loads = c.value.split(',');
+            innerContent = `
+                <div class="infra-label">${c.label}</div>
+                <div class="infra-value" style="display: flex; gap: 1.5rem; margin-top: 0.5rem; justify-content: flex-start; align-items: flex-end;">
+                    <div style="display: flex; flex-direction: column; align-items: center; line-height: 1;">
+                        <span style="font-size: 1.75rem; margin-bottom: 0.4rem;">${loads[0]?.trim()}</span>
+                        <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">1 Min</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; line-height: 1;">
+                        <span style="font-size: 1.75rem; margin-bottom: 0.4rem;">${loads[1]?.trim()}</span>
+                        <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">5 Min</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; line-height: 1;">
+                        <span style="font-size: 1.75rem; margin-bottom: 0.4rem;">${loads[2]?.trim()}</span>
+                        <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">15 Min</span>
+                    </div>
+                </div>
+            `;
+        } else {
+            innerContent = `
+                <div class="infra-label">${c.label}</div>
+                <div class="infra-value"><span>${c.value}</span> <span class="infra-subtext">${c.subtext}</span></div>
+            `;
+        }
+
         if (!div) {
             div = document.createElement('div');
             div.id = c.id;
             div.className = 'infra-card stagger-enter';
             div.style.animationDelay = `${index * 0.08}s`;
-            div.innerHTML = `
-                <div class="infra-label">${c.label}</div>
-                <div class="infra-value"><span>${c.value}</span> <span class="infra-subtext">${c.subtext}</span></div>
-            `;
+            div.innerHTML = innerContent;
             hostGrid.appendChild(div);
         } else {
-            div.querySelector('.infra-value span').textContent = c.value;
-            div.querySelector('.infra-subtext').textContent = c.subtext;
+            div.innerHTML = innerContent;
         }
     });
 }

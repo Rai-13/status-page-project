@@ -151,7 +151,7 @@ body.light-mode .orb-2 {
 
 /* Container */
 .container {
-    max-width: 900px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 3rem 1.5rem;
 }
@@ -319,7 +319,7 @@ section {
 /* Infra Grid */
 .infra-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 1.25rem;
     margin-bottom: 2rem;
 }
@@ -473,7 +473,6 @@ body.light-mode .metric-card:hover {
     stroke-width: 8;
     stroke-linecap: round;
     transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.3s ease;
-    filter: drop-shadow(0 0 4px currentcolor);
 }
 
 .gauge-value {
@@ -798,58 +797,62 @@ body.light-mode .port-item {
 .infra-card::after {
     content: "";
     position: absolute;
-    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
     background: linear-gradient(90deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
     background-size: 400%;
-    z-index: -1;
-    border-radius: 18px;
-    filter: blur(6px);
-    opacity: 0.15;
     animation: rgbGlowBox 10s linear infinite;
-    transition: opacity 0.3s ease-in-out, filter 0.3s ease-in-out;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.6;
+    transition: opacity 0.3s;
 }
 
 .metric-card::after {
     content: "";
     position: absolute;
-    top: -2px; left: -2px; right: -2px; bottom: -2px;
-    z-index: -1;
-    border-radius: 18px;
-    filter: blur(6px);
-    opacity: 0.2;
-    transition: opacity 0.3s ease-in-out, filter 0.3s ease-in-out, background 0.5s ease-in-out;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    background-size: 400%;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.6;
+    transition: opacity 0.3s ease-in-out, background 0.5s ease-in-out;
 }
 .metric-card.healthy::after {
     background: linear-gradient(90deg, #10b981, #059669);
 }
 .metric-card.warning::after {
     background: linear-gradient(90deg, #f59e0b, #d97706);
-    opacity: 0.4;
-    filter: blur(8px);
+    opacity: 0.8;
 }
 .metric-card.critical::after {
     background: linear-gradient(90deg, #ef4444, #dc2626, #ef4444);
     background-size: 200%;
-    opacity: 0.6;
-    filter: blur(10px);
+    opacity: 1;
     animation: criticalPulse 1s ease-in-out infinite alternate;
 }
 
 @keyframes criticalPulse {
-    from { opacity: 0.5; filter: blur(8px); }
-    to { opacity: 0.9; filter: blur(12px); }
+    from { opacity: 0.5; }
+    to { opacity: 1; }
 }
 
 .infra-card:hover::after, .metric-card:hover::after {
-    opacity: 0.4;
-    filter: blur(8px);
+    opacity: 1;
 }
 
 body.light-mode .infra-card::after, body.light-mode .metric-card::after {
-    opacity: 0.1;
+    opacity: 0.4;
 }
 body.light-mode .infra-card:hover::after, body.light-mode .metric-card:hover::after {
-    opacity: 0.25;
+    opacity: 0.8;
 }
 
 /* Modal Styling */
