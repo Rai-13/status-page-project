@@ -17,16 +17,15 @@ services:
   backend:
     build: ./backend
     restart: always
-    ports:
-      - "8000:8000"
+    network_mode: "host"
+    pid: "host"
+    privileged: true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
-      - DATABASE_URL=postgresql://statususer:statuspassword@db:5432/statuspage
+      - DATABASE_URL=postgresql://statususer:statuspassword@localhost:5432/statuspage
     depends_on:
       - db
-    networks:
-      - status_net
 
   frontend:
     build: ./frontend

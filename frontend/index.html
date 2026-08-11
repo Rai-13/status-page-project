@@ -71,6 +71,13 @@
                     </div>
                 </div>
             </section>
+
+            <section class="infra-section" id="system-ports">
+                <h2>Active System Ports</h2>
+                <div class="infra-grid" id="ports-grid">
+                    <!-- Ports will be injected here as glowing cards -->
+                </div>
+            </section>
         </main>
         
         <footer>
@@ -78,6 +85,16 @@
         </footer>
     </div>
 
+    <div class="modal-overlay" id="kill-modal">
+        <div class="modal-content">
+            <div class="modal-title">Confirm Port Kill</div>
+            <div class="modal-desc" id="kill-modal-desc">Are you sure you want to kill the process on this port?</div>
+            <div class="modal-actions">
+                <button class="btn btn-cancel" id="kill-cancel">Cancel</button>
+                <button class="btn btn-kill" id="kill-confirm">Yes, Kill It</button>
+            </div>
+        </div>
+    </div>
     <script src="app.js"></script>
 </body>
 </html>

@@ -803,20 +803,100 @@ body.light-mode .port-item {
     background-size: 400%;
     z-index: -1;
     border-radius: 18px;
-    filter: blur(8px);
-    opacity: 0.3;
+    filter: blur(6px);
+    opacity: 0.15;
     animation: rgbGlowBox 10s linear infinite;
-    transition: opacity 0.3s ease-in-out;
+    transition: opacity 0.3s ease-in-out, filter 0.3s ease-in-out;
 }
 
 .infra-card:hover::after, .metric-card:hover::after {
-    opacity: 0.9;
-    filter: blur(12px);
+    opacity: 0.4;
+    filter: blur(8px);
 }
 
 body.light-mode .infra-card::after, body.light-mode .metric-card::after {
-    opacity: 0.2;
+    opacity: 0.1;
 }
 body.light-mode .infra-card:hover::after, body.light-mode .metric-card:hover::after {
-    opacity: 0.6;
+    opacity: 0.25;
+}
+
+/* Modal Styling */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+.modal-content {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    transform: translateY(20px);
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+.modal-overlay.active .modal-content {
+    transform: translateY(0);
+}
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+.modal-desc {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+.btn {
+    padding: 0.5rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+.btn-cancel {
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--card-border);
+}
+.btn-cancel:hover {
+    background: rgba(255,255,255,0.05);
+}
+.btn-kill {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.5);
+}
+.btn-kill:hover {
+    background: rgba(239, 68, 68, 0.4);
+}
+
+.port-kill-btn {
+    margin-top: 1rem;
+    width: 100%;
 }

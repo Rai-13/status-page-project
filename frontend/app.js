@@ -183,26 +183,40 @@ function renderInfrastructure(infraData) {
         });
 
         let portsDiv = document.getElementById('eco-ports');
-        if (infraData.active_ports && infraData.active_ports.length > 0) {
-            let portsHtml = '<div class="infra-label">Active Network Ports</div><div class="ports-list">';
-            infraData.active_ports.forEach(p => {
-                const svcName = p.service.replace('status-page-project-', '').replace('-1', '');
-                portsHtml += `<div class="port-item"><span class="port-badge">${p.port}</span><span class="port-name">${svcName}</span></div>`;
-            });
-            portsHtml += '</div>';
+        if (portsDiv) portsDiv.remove(); // Clean up old grouped card
 
-            if (!portsDiv) {
-                portsDiv = document.createElement('div');
-                portsDiv.id = 'eco-ports';
-                portsDiv.className = 'infra-card stagger-enter ports-card';
-                portsDiv.style.animationDelay = `${0.5 + ecoCards.length * 0.1}s`;
-                portsDiv.innerHTML = portsHtml;
-                ecoGrid.appendChild(portsDiv);
-            } else {
-                portsDiv.innerHTML = portsHtml;
+        const portsGrid = document.getElementById('ports-grid');
+        if (infraData.active_ports && infraData.active_ports.length > 0 && portsGrid) {
+            if (portsGrid.querySelector('.skeleton') || portsGrid.querySelector('.loading')) {
+                portsGrid.innerHTML = '';
             }
-        } else if (portsDiv) {
-            portsDiv.remove();
+            
+            // Remove ports that are no longer active
+            const activePortIds = infraData.active_ports.map(p => `port-${p.port}`);
+            Array.from(portsGrid.children).forEach(child => {
+                if (child.id && !activePortIds.includes(child.id)) {
+                    child.remove();
+                }
+            });
+
+            infraData.active_ports.forEach((p, index) => {
+                const svcName = p.service.replace('status-page-project-', '').replace('-1', '');
+                let portCard = document.getElementById(`port-${p.port}`);
+                if (!portCard) {
+                    portCard = document.createElement('div');
+                    portCard.id = `port-${p.port}`;
+                    portCard.className = 'infra-card stagger-enter';
+                    portCard.style.animationDelay = `${index * 0.1}s`;
+                    portCard.innerHTML = `
+                        <div class="infra-label">Port ${p.port}</div>
+                        <div class="infra-value"><span style="font-size: 1.1rem; word-break: break-all;">${svcName}</span> <span class="infra-subtext">Listening</span></div>
+                        <button class="btn btn-kill port-kill-btn" onclick="requestKillPort(${p.port})">Kill Process</button>
+                    `;
+                    portsGrid.appendChild(portCard);
+                } else {
+                    portCard.querySelector('.infra-value span').textContent = svcName;
+                }
+            });
         }
     }
 
@@ -219,7 +233,10 @@ function renderInfrastructure(infraData) {
         { id: 'host-ram', label: 'Total RAM', value: `${infraData.total_ram_gb} GB`, subtext: 'Physical' },
         { id: 'host-swap', label: 'Swap Memory', value: `${infraData.swap_memory_gb} GB`, subtext: 'Virtual' },
         { id: 'host-procs', label: 'Active Processes', value: infraData.active_processes, subtext: 'Running' },
-        { id: 'host-uptime', label: 'Host Uptime', value: `${infraData.uptime_hours}h`, subtext: 'Continuous' }
+        { id: 'host-uptime', label: 'Host Uptime', value: `${infraData.uptime_hours}h`, subtext: 'Continuous' },
+        { id: 'host-users', label: 'Logged Users', value: infraData.logged_in_users || 0, subtext: 'Active Sessions' },
+        { id: 'host-partitions', label: 'Disk Partitions', value: infraData.disk_partitions || 0, subtext: 'Mounted Volumes' },
+        { id: 'host-boot', label: 'Last Boot Time', value: infraData.boot_time || 'Unknown', subtext: 'System Start' }
     ];
 
     hostCards.forEach((c, index) => {
@@ -288,3 +305,59 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 setInterval(refreshData, 5000);
+
+// Modal Logic
+let currentPortToKill = null;
+const killModal = document.getElementById('kill-modal');
+const killModalDesc = document.getElementById('kill-modal-desc');
+
+window.requestKillPort = function(port) {
+    currentPortToKill = port;
+    if (killModalDesc) {
+        killModalDesc.innerHTML = `Are you sure you want to forcefully terminate the process listening on <strong>Port ${port}</strong>?`;
+    }
+    if (killModal) killModal.classList.add('active');
+};
+
+if (document.getElementById('kill-cancel')) {
+    document.getElementById('kill-cancel').addEventListener('click', () => {
+        if (killModal) killModal.classList.remove('active');
+        currentPortToKill = null;
+    });
+}
+
+if (document.getElementById('kill-confirm')) {
+    document.getElementById('kill-confirm').addEventListener('click', async () => {
+        if (!currentPortToKill) return;
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/ports/${currentPortToKill}/kill`, {
+                method: 'POST'
+            });
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                console.log(data.message);
+                // Temporarily show success on modal before closing
+                killModalDesc.innerHTML = `<span style="color:#10b981;">Successfully killed process on port ${currentPortToKill}</span>`;
+                
+                // Immediately remove the card for realtime feel
+                const deadCard = document.getElementById(`port-${currentPortToKill}`);
+                if (deadCard) deadCard.remove();
+                
+                setTimeout(() => {
+                    if (killModal) killModal.classList.remove('active');
+                    refreshData();
+                }, 1500);
+            } else {
+                alert("Error: " + data.message);
+                if (killModal) killModal.classList.remove('active');
+            }
+        } catch (e) {
+            alert("Failed to kill port: " + e.message);
+            if (killModal) killModal.classList.remove('active');
+        }
+        
+        currentPortToKill = null;
+    });
+}

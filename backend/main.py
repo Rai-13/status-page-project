@@ -111,6 +111,21 @@ def get_infrastructure(db: Session = Depends(database.get_db)):
     net_sent_gb = round(net_io.bytes_sent / (1024**3), 2)
     net_recv_gb = round(net_io.bytes_recv / (1024**3), 2)
     
+    try:
+        users_count = len(psutil.users())
+    except:
+        users_count = 0
+        
+    try:
+        partitions_count = len(psutil.disk_partitions())
+    except:
+        partitions_count = 0
+        
+    try:
+        boot_time_str = datetime.fromtimestamp(psutil.boot_time()).strftime("%Y-%m-%d %H:%M")
+    except:
+        boot_time_str = "Unknown"
+    
     disk_usage = psutil.disk_usage('/')
     disk_total_gb = round(disk_usage.total / (1024**3), 1)
     disk_free_gb = round(disk_usage.free / (1024**3), 1)
@@ -141,6 +156,9 @@ def get_infrastructure(db: Session = Depends(database.get_db)):
         "db_version": "Unknown",
         "k8s_status": "Offline",
         "active_ports": [],
+        "logged_in_users": users_count,
+        "disk_partitions": partitions_count,
+        "boot_time": boot_time_str,
         "error": None
     }
     
@@ -150,30 +168,42 @@ def get_infrastructure(db: Session = Depends(database.get_db)):
         containers = client.containers.list(all=True)
         running = 0
         stopped = 0
-        active_ports = []
-        seen_ports = set()
         for c in containers:
             if c.status == 'running':
                 running += 1
-                if c.ports:
-                    for container_port, host_bindings in c.ports.items():
-                        if host_bindings:
-                            for binding in host_bindings:
-                                host_port = binding.get('HostPort')
-                                if host_port and host_port not in seen_ports:
-                                    seen_ports.add(host_port)
-                                    active_ports.append({
-                                        "port": host_port,
-                                        "service": c.name
-                                    })
             else:
                 stopped += 1
-                
         infra_data["containers_running"] = running
         infra_data["containers_stopped"] = stopped
-        infra_data["active_ports"] = active_ports
     except Exception as e:
-        infra_data["error"] = f"Docker connection failed: {str(e)}"
+        if not infra_data["error"]:
+            infra_data["error"] = f"Docker connection failed: {str(e)}"
+            
+    # 1.5 Fetch ALL Host Ports using psutil
+    try:
+        conns = psutil.net_connections(kind='inet')
+        listening = [c for c in conns if c.status == 'LISTEN']
+        active_ports = []
+        seen_ports = set()
+        for c in listening:
+            port = c.laddr.port
+            if port not in seen_ports:
+                seen_ports.add(port)
+                proc_name = "Unknown"
+                if c.pid:
+                    try:
+                        proc_name = psutil.Process(c.pid).name()
+                    except psutil.NoSuchProcess:
+                        pass
+                active_ports.append({
+                    "port": str(port),
+                    "service": proc_name,
+                    "pid": c.pid
+                })
+        infra_data["active_ports"] = sorted(active_ports, key=lambda x: int(x["port"]))
+    except Exception as e:
+        if not infra_data["error"]:
+            infra_data["error"] = f"Host ports read failed: {str(e)}"
         
     # 2. Check Database Version
     try:
@@ -189,3 +219,17 @@ def get_infrastructure(db: Session = Depends(database.get_db)):
             
     return infra_data
 
+@app.post("/api/ports/{port}/kill")
+def kill_port(port: int):
+    try:
+        conns = psutil.net_connections(kind='inet')
+        for c in conns:
+            if c.laddr.port == port and c.status == 'LISTEN':
+                if c.pid:
+                    proc = psutil.Process(c.pid)
+                    proc_name = proc.name()
+                    proc.terminate()
+                    return {"status": "success", "message": f"Killed process {proc_name} (PID: {c.pid}) on port {port}"}
+        return {"status": "error", "message": f"No process found listening on port {port}"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
