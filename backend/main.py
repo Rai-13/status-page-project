@@ -37,6 +37,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+@app.get("/api/health")
+def health_check(db: Session = Depends(database.get_db)):
+    """Simple health check endpoint for Docker/K8s/Load Balancers"""
+    try:
+        # Check if database is alive
+        db.execute(text("SELECT 1"))
+        return {"status": "healthy", "database": "connected"}
+    except Exception as e:
+        # Return 503 Service Unavailable if DB is down, or just return 200 with error (FastAPI defaults to 200 if not specified, 
+        # but let's just return JSON, Docker healthcheck can parse it or curl will just check for 200)
+        return {"status": "unhealthy", "database": "disconnected", "error": str(e)}
 
 @app.get("/api/status")
 def get_current_status(db: Session = Depends(database.get_db)):
