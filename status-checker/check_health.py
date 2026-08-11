@@ -37,10 +37,16 @@ def save_result(conn, name, usage_percent, error_message=None):
         return
         
     status = "up"
-    if usage_percent >= 95:
-        status = "down"
-    elif usage_percent >= 80:
-        status = "degraded"
+    if name == "Battery":
+        if usage_percent <= 20:
+            status = "down"
+        elif usage_percent <= 50:
+            status = "degraded"
+    else:
+        if usage_percent >= 95:
+            status = "down"
+        elif usage_percent >= 80:
+            status = "degraded"
         
     try:
         cursor = conn.cursor()

@@ -14,6 +14,9 @@ import models
 import database
 from database import engine
 
+PROTECTED_PORTS = {22, 53, 80, 443, 111, 631, 5432, 8000, 8080, 3306}
+PROTECTED_PROCESSES = ["language_server", "docker", "containerd", "systemd", "sshd"]
+
 # Create the database tables
 models.Base.metadata.create_all(bind=engine)
 
@@ -195,10 +198,12 @@ def get_infrastructure(db: Session = Depends(database.get_db)):
                         proc_name = psutil.Process(c.pid).name()
                     except psutil.NoSuchProcess:
                         pass
+                is_proc_protected = any(p in proc_name.lower() for p in PROTECTED_PROCESSES)
                 active_ports.append({
                     "port": str(port),
                     "service": proc_name,
-                    "pid": c.pid
+                    "pid": c.pid,
+                    "is_protected": (port in PROTECTED_PORTS) or is_proc_protected
                 })
         infra_data["active_ports"] = sorted(active_ports, key=lambda x: int(x["port"]))
     except Exception as e:
@@ -221,6 +226,8 @@ def get_infrastructure(db: Session = Depends(database.get_db)):
 
 @app.post("/api/ports/{port}/kill")
 def kill_port(port: int):
+    if port in PROTECTED_PORTS:
+        return {"status": "error", "message": f"Action Denied: Port {port} is a critical system port and cannot be killed."}
     try:
         conns = psutil.net_connections(kind='inet')
         for c in conns:
@@ -228,6 +235,8 @@ def kill_port(port: int):
                 if c.pid:
                     proc = psutil.Process(c.pid)
                     proc_name = proc.name()
+                    if any(p in proc_name.lower() for p in PROTECTED_PROCESSES):
+                        return {"status": "error", "message": f"Action Denied: Process '{proc_name}' is a critical system process and cannot be killed."}
                     proc.terminate()
                     return {"status": "success", "message": f"Killed process {proc_name} (PID: {c.pid}) on port {port}"}
         return {"status": "error", "message": f"No process found listening on port {port}"}

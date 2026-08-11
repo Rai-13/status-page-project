@@ -102,6 +102,9 @@ function renderServices(services) {
             if (usage >= 80) { colorClass = "warning"; strokeColor = "#f59e0b"; }
             if (usage >= 95) { colorClass = "critical"; strokeColor = "#ef4444"; }
         }
+        
+        // Apply the color class to the card itself to trigger the glowing border CSS
+        card.className = `metric-card ${isNew ? 'stagger-enter' : ''} ${colorClass}`;
 
         let nameDisplay = metric.service_name.replace("_", " ");
         if (metric.service_name === 'Battery' && metric.error_message) {
@@ -207,10 +210,14 @@ function renderInfrastructure(infraData) {
                     portCard.id = `port-${p.port}`;
                     portCard.className = 'infra-card stagger-enter';
                     portCard.style.animationDelay = `${index * 0.1}s`;
+                    let actionHtml = p.is_protected 
+                        ? `<div class="infra-subtext" style="color: #10b981; margin-top: 1rem; border: 1px solid #10b98133; padding: 0.4rem; border-radius: 6px; text-align: center;">🛡️ Protected System Port</div>`
+                        : `<button class="btn btn-kill port-kill-btn" onclick="requestKillPort(${p.port})">Kill Process</button>`;
+                        
                     portCard.innerHTML = `
                         <div class="infra-label">Port ${p.port}</div>
                         <div class="infra-value"><span style="font-size: 1.1rem; word-break: break-all;">${svcName}</span> <span class="infra-subtext">Listening</span></div>
-                        <button class="btn btn-kill port-kill-btn" onclick="requestKillPort(${p.port})">Kill Process</button>
+                        ${actionHtml}
                     `;
                     portsGrid.appendChild(portCard);
                 } else {
