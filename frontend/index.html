@@ -4,31 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Server Monitor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="background">
+        <div class="tech-grid"></div>
         <div class="glow-orb orb-1"></div>
         <div class="glow-orb orb-2"></div>
     </div>
     
     <div class="container">
-        <header>
+        <header class="glass-header">
             <div class="brand">
                 <div class="logo"></div>
-                <h1>Host Server Monitor</h1>
+                <h1>System Monitor and Infrastructure Dashboard</h1>
             </div>
-            <div class="global-status" id="global-status">
-                <span class="status-indicator"></span>
-                <span class="status-text">Checking system status...</span>
+            <div class="header-controls">
+                <div class="global-status" id="global-status">
+                    <span class="status-indicator"></span>
+                    <span class="status-text">Checking system status...</span>
+                </div>
+                <label class="theme-switch" title="Toggle Light/Dark Mode">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider round"></span>
+                </label>
             </div>
         </header>
 
         <main>
-            <section class="infra-section">
-                <h2>Docker Infrastructure</h2>
-                <div class="infra-grid" id="infra-grid">
+            <section class="infra-section" id="host-infra">
+                <h2>Host Infrastructure</h2>
+                <div class="infra-grid" id="host-grid">
                     <div class="infra-card skeleton">
                         <div class="skeleton-text" style="width:40%"></div>
                         <div class="skeleton-text" style="width:70%; margin-top:0.5rem; height: 2rem;"></div>
@@ -36,16 +45,26 @@
                 </div>
             </section>
 
-            <section class="services-section">
-                <h2>System Resources (Host)</h2>
+            <section class="services-section" id="resources">
+                <h2>System Resources</h2>
                 <div class="metrics-grid" id="metrics-grid">
                     <!-- Gauge Cards injected here -->
+                </div>
+            </section>
+
+            <section class="infra-section" id="ecosystem">
+                <h2>Docker & Kubernetes Ecosystem</h2>
+                <div class="infra-grid" id="ecosystem-grid">
+                    <div class="infra-card skeleton">
+                        <div class="skeleton-text" style="width:40%"></div>
+                        <div class="skeleton-text" style="width:70%; margin-top:0.5rem; height: 2rem;"></div>
+                    </div>
                 </div>
             </section>
         </main>
         
         <footer>
-            <p>System metrics logged every 30 seconds. &copy; 2026 Company Inc.</p>
+            <p>System metrics logged every 5 seconds. &copy; 2026 Company Inc.</p>
         </footer>
     </div>
 

@@ -32,7 +32,7 @@ def init_db():
         print(f"Error connecting to database: {e}")
         return None
 
-def save_result(conn, name, usage_percent):
+def save_result(conn, name, usage_percent, error_message=None):
     if not conn:
         return
         
@@ -52,7 +52,7 @@ def save_result(conn, name, usage_percent):
             "system",
             status,
             int(usage_percent),
-            None,
+            error_message,
             datetime.utcnow()
         ))
         conn.commit()
@@ -74,6 +74,12 @@ def main():
     save_result(conn, "CPU_Usage", cpu_usage)
     save_result(conn, "RAM_Usage", ram_usage)
     save_result(conn, "Disk_Usage", disk_usage)
+    
+    if hasattr(psutil, "sensors_battery"):
+        battery = psutil.sensors_battery()
+        if battery:
+            charging_status = "Charging" if battery.power_plugged else "Discharging"
+            save_result(conn, "Battery", battery.percent, error_message=charging_status)
         
     if conn:
         conn.close()

@@ -16,6 +16,7 @@ services:
 
   backend:
     build: ./backend
+    restart: always
     ports:
       - "8000:8000"
     volumes:
@@ -44,7 +45,9 @@ services:
     depends_on:
       - db
     # Loop infinitely for local dev
-    command: sh -c "while true; do python check_health.py; sleep 30; done"
+    command: sh -c "while true; do python check_health.py; sleep 5; done"
+    volumes:
+      - /sys/class/power_supply:/sys/class/power_supply:ro
     networks:
       - status_net
 

@@ -1,4 +1,10 @@
-const API_BASE_URL = 'http://localhost:8000/api';
+import re
+
+with open('frontend/app.js', 'r') as f:
+    content = f.read()
+
+# I will just write a new file contents since I am basically rewriting half the file.
+new_content = """const API_BASE_URL = 'http://localhost:8000/api';
 
 async function fetchStatus() {
     try {
@@ -289,3 +295,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 setInterval(refreshData, 5000);
+"""
+
+with open('frontend/app.js', 'w') as f:
+    f.write(new_content)
+
