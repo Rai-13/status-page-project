@@ -52,7 +52,7 @@ function renderSkeletons() {
     const grid = document.getElementById('metrics-grid');
     grid.innerHTML = '';
     
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
         const card = document.createElement('div');
         card.className = 'metric-card';
         card.innerHTML = `
@@ -127,7 +127,6 @@ function renderServices(services) {
         } else {
             card.querySelector('.metric-title').innerHTML = nameDisplay;
             const fill = card.querySelector('.gauge-fill');
-            // Animate stroke and dashoffset smoothly via CSS transition (handled in css but we apply inline)
             fill.style.transition = 'stroke-dashoffset 0.5s ease-in-out, stroke 0.5s ease';
             fill.setAttribute('stroke', strokeColor);
             fill.setAttribute('stroke-dashoffset', 125.6 * (1 - usage/100));

@@ -1,8 +1,8 @@
 :root {
-    --bg-color: #0a0a0c;
-    --card-bg: rgba(255, 255, 255, 0.03);
-    --card-border: rgba(255, 255, 255, 0.08);
-    --text-primary: #ffffff;
+    --bg-color: transparent;
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --card-border: rgba(255, 255, 255, 0.1);
+    --text-primary: #e0f2fe;
     --text-secondary: #94a3b8;
     
     --status-up: #10b981;
@@ -68,6 +68,21 @@ body {
     height: 100vh;
     z-index: -1;
     overflow: hidden;
+    background: linear-gradient(-45deg, #0f172a, #1e1b4b, #09090b, #312e81);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+}
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+body.light-mode .background {
+    background: linear-gradient(-45deg, #f8fafc, #e2e8f0, #f1f5f9, #cbd5e1);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
 }
 
 .tech-grid {
@@ -237,9 +252,9 @@ input:checked + .slider:before {
 .logo {
     width: 32px;
     height: 32px;
-    background: linear-gradient(135deg, #38bdf8, #8b5cf6);
-    border-radius: 8px;
-    box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 h1 {
@@ -322,7 +337,6 @@ section {
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     box-shadow: 0 4px 20px rgba(0,0,0,0.1), inset 0 0 0 1px rgba(255,255,255,0.02);
     position: relative;
-    overflow: hidden;
 }
 
 body.light-mode .infra-card {
@@ -412,6 +426,7 @@ body.light-mode .infra-value {
     text-align: center;
     box-shadow: 0 4px 20px rgba(0,0,0,0.1), inset 0 0 0 1px rgba(255,255,255,0.02);
     transition: all 0.3s ease;
+    position: relative;
 }
 .metric-card:hover {
     border-color: rgba(139, 92, 246, 0.4);
@@ -771,4 +786,37 @@ body.light-mode .port-item {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* RGB Box Lighting Effect */
+@keyframes rgbGlowBox {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.infra-card::after, .metric-card::after {
+    content: "";
+    position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    background: linear-gradient(90deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
+    background-size: 400%;
+    z-index: -1;
+    border-radius: 18px;
+    filter: blur(8px);
+    opacity: 0.3;
+    animation: rgbGlowBox 10s linear infinite;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.infra-card:hover::after, .metric-card:hover::after {
+    opacity: 0.9;
+    filter: blur(12px);
+}
+
+body.light-mode .infra-card::after, body.light-mode .metric-card::after {
+    opacity: 0.2;
+}
+body.light-mode .infra-card:hover::after, body.light-mode .metric-card:hover::after {
+    opacity: 0.6;
 }
