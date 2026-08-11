@@ -114,15 +114,15 @@ body.light-mode .tech-grid {
     position: absolute;
     border-radius: 50%;
     filter: blur(80px);
-    opacity: 0.4;
+    opacity: 0.15;
     animation: rgbShift 15s infinite linear;
 }
 
 @keyframes rgbShift {
-    0% { filter: blur(80px) hue-rotate(0deg); opacity: 0.3; transform: scale(0.95); }
-    33% { opacity: 0.5; transform: scale(1.05); }
-    66% { opacity: 0.4; transform: scale(1.0); }
-    100% { filter: blur(80px) hue-rotate(360deg); opacity: 0.3; transform: scale(0.95); }
+    0% { filter: blur(80px) hue-rotate(0deg); opacity: 0.1; transform: scale(0.95); }
+    33% { opacity: 0.2; transform: scale(1.05); }
+    66% { opacity: 0.15; transform: scale(1.0); }
+    100% { filter: blur(80px) hue-rotate(360deg); opacity: 0.1; transform: scale(0.95); }
 }
 
 .orb-1 {
@@ -130,7 +130,7 @@ body.light-mode .tech-grid {
     left: -10%;
     width: 50vw;
     height: 50vw;
-    background: radial-gradient(circle, rgba(56,189,248,0.15) 0%, rgba(0,0,0,0) 70%);
+    background: radial-gradient(circle, rgba(56,189,248,0.08) 0%, rgba(0,0,0,0) 70%);
 }
 
 .orb-2 {
@@ -138,15 +138,15 @@ body.light-mode .tech-grid {
     right: -10%;
     width: 60vw;
     height: 60vw;
-    background: radial-gradient(circle, rgba(139,92,246,0.15) 0%, rgba(0,0,0,0) 70%);
+    background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, rgba(0,0,0,0) 70%);
     animation-delay: -4s;
 }
 
 body.light-mode .orb-1 {
-    background: radial-gradient(circle, rgba(56,189,248,0.3) 0%, rgba(0,0,0,0) 70%);
+    background: radial-gradient(circle, rgba(56,189,248,0.15) 0%, rgba(0,0,0,0) 70%);
 }
 body.light-mode .orb-2 {
-    background: radial-gradient(circle, rgba(139,92,246,0.3) 0%, rgba(0,0,0,0) 70%);
+    background: radial-gradient(circle, rgba(139,92,246,0.15) 0%, rgba(0,0,0,0) 70%);
 }
 
 /* Container */
@@ -807,7 +807,7 @@ body.light-mode .port-item {
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
-    opacity: 0.6;
+    opacity: 0.25;
     transition: opacity 0.3s;
 }
 
@@ -845,14 +845,14 @@ body.light-mode .port-item {
 }
 
 .infra-card:hover::after, .metric-card:hover::after {
-    opacity: 1;
+    opacity: 0.5;
 }
 
 body.light-mode .infra-card::after, body.light-mode .metric-card::after {
-    opacity: 0.4;
+    opacity: 0.15;
 }
 body.light-mode .infra-card:hover::after, body.light-mode .metric-card:hover::after {
-    opacity: 0.8;
+    opacity: 0.4;
 }
 
 /* Modal Styling */

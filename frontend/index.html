@@ -70,12 +70,41 @@
                         <div class="skeleton-text" style="width:70%; margin-top:0.5rem; height: 2rem;"></div>
                     </div>
                 </div>
+                <div class="docker-list-container" style="margin-top: 1.5rem; border: 1px solid var(--border-color); border-radius: 12px; overflow-x: auto; background: var(--card-bg);">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                        <thead style="background: rgba(255,255,255,0.05); color: var(--text-secondary);">
+                            <tr>
+                                <th style="padding: 1rem; border-bottom: 1px solid var(--border-color);">ID</th>
+                                <th style="padding: 1rem; border-bottom: 1px solid var(--border-color);">Name</th>
+                                <th style="padding: 1rem; border-bottom: 1px solid var(--border-color);">Image</th>
+                                <th style="padding: 1rem; border-bottom: 1px solid var(--border-color);">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="docker-list-body">
+                            <!-- Rows injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="infra-section" id="process-manager">
+                <h2>Top Consuming Processes</h2>
+                <div class="infra-grid" id="processes-grid">
+                    <!-- Top processes will be injected here -->
+                </div>
             </section>
 
             <section class="infra-section" id="system-ports">
                 <h2>Active System Ports</h2>
                 <div class="infra-grid" id="ports-grid">
                     <!-- Ports will be injected here as glowing cards -->
+                </div>
+            </section>
+            
+            <section class="infra-section" id="live-logs">
+                <h2>Live System Logs (dmesg)</h2>
+                <div class="terminal-container" style="background: #09090b; color: #a3e635; font-family: 'Courier New', Courier, monospace; padding: 1rem; border-radius: 12px; height: 350px; overflow-y: auto; font-size: 0.85rem; border: 1px solid var(--border-color); box-shadow: inset 0 0 10px rgba(0,0,0,0.5);">
+                    <div id="logs-output" style="white-space: pre-wrap; word-break: break-all;">Loading kernel logs...</div>
                 </div>
             </section>
         </main>

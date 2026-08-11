@@ -6,8 +6,8 @@ async function fetchStatus() {
         if (!response.ok) throw new Error('Network response was not ok');
         return await response.json();
     } catch (error) {
-        console.error('Error fetching status:', error);
-        return null;
+        console.error('Error fetching data:', error);
+        updateStatus('Connection to server lost', 'critical');
     }
 }
 
@@ -240,8 +240,11 @@ function renderInfrastructure(infraData) {
         { id: 'host-os', label: 'Operating System', value: infraData.os_info.split(' ')[0], subtext: infraData.os_info.split(' ')[1] || '' },
         { id: 'host-arch', label: 'Architecture', value: infraData.architecture, subtext: '' },
         { id: 'host-load', label: 'System Load', value: infraData.sys_load, subtext: '' },
-        { id: 'host-netsent', label: 'Network Sent', value: `${infraData.net_sent_gb} GB`, subtext: '' },
-        { id: 'host-netrecv', label: 'Network Recv', value: `${infraData.net_recv_gb} GB`, subtext: '' },
+        { id: 'host-cpu-temp', label: 'CPU Temp', value: infraData.cpu_temp || 'N/A', subtext: '' },
+        { id: 'host-netsent', label: 'Up Speed', value: `${infraData.net_speed_sent_mb || 0} MB/s`, subtext: '' },
+        { id: 'host-netrecv', label: 'Down Speed', value: `${infraData.net_speed_recv_mb || 0} MB/s`, subtext: '' },
+        { id: 'host-diskread', label: 'Disk Read', value: `${infraData.disk_speed_read_mb || 0} MB/s`, subtext: '' },
+        { id: 'host-diskwrite', label: 'Disk Write', value: `${infraData.disk_speed_write_mb || 0} MB/s`, subtext: '' },
         { id: 'host-disktotal', label: 'Disk Capacity', value: `${infraData.disk_total_gb} GB`, subtext: '' },
         { id: 'host-diskfree', label: 'Disk Free', value: `${infraData.disk_free_gb} GB`, subtext: '' },
         { id: 'host-cpucores', label: 'CPU Cores', value: infraData.cpu_cores, subtext: '' },
@@ -295,6 +298,75 @@ function renderInfrastructure(infraData) {
             div.innerHTML = innerContent;
         }
     });
+
+    // Render Top Processes
+    const procGrid = document.getElementById('processes-grid');
+    if (infraData.top_processes && procGrid) {
+        infraData.top_processes.forEach((proc, index) => {
+            let procCard = procGrid.children[index];
+            if (!procCard) {
+                procCard = document.createElement('div');
+                procCard.className = 'infra-card stagger-enter';
+                procCard.style.animationDelay = `${index * 0.1}s`;
+                procCard.innerHTML = `
+                    <div style="flex-grow: 1;">
+                        <div class="infra-label proc-name" style="text-transform: none; font-size: 1rem; color: var(--text-primary); margin-bottom: 0.5rem; word-break: break-all;"></div>
+                        <div class="infra-value">
+                            <span class="proc-mem" style="font-size: 1.5rem; color: #ef4444;"></span> <span class="infra-subtext">RAM</span>
+                        </div>
+                        <div class="infra-subtext proc-pid" style="margin-top: 0.5rem;"></div>
+                    </div>
+                `;
+                procGrid.appendChild(procCard);
+            }
+            procCard.querySelector('.proc-name').textContent = proc.name;
+            procCard.querySelector('.proc-mem').textContent = `${proc.mem}%`;
+            procCard.querySelector('.proc-pid').textContent = `PID: ${proc.pid}`;
+        });
+        
+        // Remove extra cards if processes count reduced
+        while (procGrid.children.length > infraData.top_processes.length) {
+            procGrid.removeChild(procGrid.lastChild);
+        }
+    }
+
+    // Render Docker Details
+    const dockerBody = document.getElementById('docker-list-body');
+    if (infraData.container_details && dockerBody) {
+        let html = '';
+        infraData.container_details.forEach(c => {
+            const statusColor = c.status.toLowerCase().includes('run') ? 'var(--status-up)' : (c.status.toLowerCase().includes('exit') ? 'var(--status-down)' : 'var(--status-degraded)');
+            html += `
+                <tr>
+                    <td style="padding: 1rem; border-bottom: 1px solid var(--border-color); font-family: monospace;">${c.id}</td>
+                    <td style="padding: 1rem; border-bottom: 1px solid var(--border-color); font-weight: 500;">${c.name}</td>
+                    <td style="padding: 1rem; border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">${c.image}</td>
+                    <td style="padding: 1rem; border-bottom: 1px solid var(--border-color);">
+                        <span style="color: ${statusColor}; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px;">${c.status}</span>
+                    </td>
+                </tr>
+            `;
+        });
+        dockerBody.innerHTML = html;
+    }
+}
+
+async function fetchLogs() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/logs`);
+        if (!response.ok) return;
+        const data = await response.json();
+        const logsOutput = document.getElementById('logs-output');
+        if (logsOutput && data.logs) {
+            const newText = data.logs.join('\n');
+            if (logsOutput.textContent !== newText) {
+                logsOutput.textContent = newText;
+                logsOutput.parentElement.scrollTop = logsOutput.parentElement.scrollHeight;
+            }
+        }
+    } catch (e) {
+        console.error('Failed to fetch logs', e);
+    }
 }
 
 function initTheme() {
@@ -344,6 +416,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 setInterval(refreshData, 5000);
+setInterval(fetchLogs, 5000);
+fetchLogs();
 
 // Modal Logic
 let currentPortToKill = null;
