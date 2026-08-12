@@ -195,6 +195,7 @@ body.light-mode .glass-header {
     display: inline-block;
     width: 60px;
     height: 34px;
+    flex-shrink: 0;
 }
 
 .theme-switch input { 
